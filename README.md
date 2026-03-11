@@ -42,11 +42,6 @@ state = state.copy(isLoading: .set(true), user: .set(someUser))
 
 This generates a `copy` function that updates only the specified properties.
 
-## Requirements
-
-- Swift 5.9+
-- Xcode 15+
-
 ## License
 
 Licensed under the Apache License 2.0. See `LICENSE` for details.
