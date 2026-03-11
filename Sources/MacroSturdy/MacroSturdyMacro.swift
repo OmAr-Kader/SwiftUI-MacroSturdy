@@ -61,16 +61,25 @@ public struct CopyableMacro: MemberMacro {
             }
 
             for binding in varDecl.bindings {
-                // If there's an accessor block, detect pure computed properties.
+                // If there's an accessor block, only allow observer-only stored properties.
                 if let accessorBlock = binding.accessorBlock {
-                    // Using textual inspection of accessorBlock.accessors to be robust across SwiftSyntax versions.
-                    let accessorText = accessorBlock.accessors.description
-                    let hasGet = accessorText.contains("get")
-                    let hasWillSet = accessorText.contains("willSet")
-                    let hasDidSet = accessorText.contains("didSet")
+                    // `var foo: T { ... }` is represented as `.getter` and is always computed.
+                    if case .getter = accessorBlock.accessors {
+                        continue
+                    }
 
-                    // Skip pure computed property (getter only, no observers)
-                    if hasGet && !hasWillSet && !hasDidSet {
+                    if case .accessors(let accessorList) = accessorBlock.accessors {
+                        let isObserverOnly = accessorList.allSatisfy { accessor in
+                            let kind = accessor.accessorSpecifier.tokenKind
+                            return kind == .keyword(.willSet) || kind == .keyword(.didSet)
+                        }
+
+                        // Skip computed properties such as explicit get/set and read/modify variants.
+                        if !isObserverOnly {
+                            continue
+                        }
+                    } else {
+                        // Future-proof fallback: unknown accessor forms are treated as computed.
                         continue
                     }
                 }
