@@ -47,3 +47,28 @@ public enum Update<T> {
     case keep
     case set(T)
 }
+
+
+/// A macro that generates `CodingKeys`, `init(from:)`, and `encode(to:)` for structs, with optional property filtering.
+///
+/// Apply `@FilterCodable` to a struct to auto-generate the necessary conformance to `Codable`. By default, all properties are included in the generated code. However, you
+/// can use the `@CodableIgnore` macro to specify properties that should be excluded from the generated `CodingKeys`, `init(from:)`, and `encode(to:)` implementations.
+///
+/// ## Example
+/// ```swift
+/// @FilterCodable
+/// struct User: Codable {
+///     var id: Int
+///     var firstName: String
+///     var lastName: String
+///     @CodableIgnore { firstName + lastName }
+///     var fullName: String
+/// }
+/// ```
+/// In this example, the `fullName` property will be ignored in the generated `CodingKeys`, `init(from:)`, and `encode(to:)` implementations, while `id`, `firstName`, and `lastName` will be included as usual.
+@attached(member, names: named(CodingKeys), named(init(from:)), named(encode(to:)))
+public macro SturdyFilterCodable() = #externalMacro(module: "MacroSturdy", type: "FilterCodableMacro")
+
+/// Marks a property to be excluded from the generated `CodingKeys`, `init(from:)`, and `encode(to:)` implementations when using `@FilterCodable`.
+@attached(peer)
+public macro CodableIgnore(_ block: () -> Void) = #externalMacro(module: "MacroSturdy", type: "CodableIgnoreMacro")
