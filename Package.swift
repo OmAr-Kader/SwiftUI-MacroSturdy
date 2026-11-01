@@ -18,7 +18,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Syntax for macro implementation
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "603.0.1")
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "604.0.0")
     ],
     targets: [
         .macro(

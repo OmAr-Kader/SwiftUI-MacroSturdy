@@ -19,7 +19,5 @@ struct MacroSturdyPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         CopyableMacro.self,
         NoCopyMacro.self,
-        FilterCodableMacro.self,
-        CodableIgnoreMacro.self
     ]
 }
