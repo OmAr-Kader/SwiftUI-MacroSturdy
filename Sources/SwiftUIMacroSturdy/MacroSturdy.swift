@@ -5,6 +5,8 @@
 //  Created by OmAr Kader on 03/12/2025.
 //
 
+import Foundation
+
 /// A macro that generates a `copy` function for structs with `Update<T>` parameters.
 ///
 /// Apply `@Copyable` to a struct to auto-generate a mutating `copy` function
@@ -47,3 +49,35 @@ public enum Update<T> {
     case keep
     case set(T)
 }
+
+
+/// A macro that generates a localized string using the provided `String.LocalizationValue`.
+///
+/// Apply `#local("localizationKey")` to generate a localized string for the given key.
+///
+/// ## Example
+/// ```swift
+/// let greeting = #local("Hello, \(name)")
+/// ```
+///
+/// NOTE: Make sure you enable `Use Compiler to Extract Swift Strings` in your project build settings.
+@freestanding(expression)
+public macro local(_ value: String.LocalizationValue) -> String =
+    #externalMacro(
+        module: "MacroSturdy",
+        type: "LocalizationMacro"
+    )
+
+/// Same as `#local("localizationKey")` but with a shorter syntax using `#l("localizationKey")`.
+///
+/// ## Example
+/// ```swift
+/// let greeting = #l("Hello, \(name)")
+/// ```
+@freestanding(expression)
+public macro l(_ value: String.LocalizationValue) -> String =
+    #externalMacro(
+        module: "MacroSturdy",
+        type: "LocalizationMacro"
+    )
+

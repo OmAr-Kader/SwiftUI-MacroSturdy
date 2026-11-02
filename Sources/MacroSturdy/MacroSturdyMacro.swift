@@ -19,5 +19,6 @@ struct MacroSturdyPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         CopyableMacro.self,
         NoCopyMacro.self,
+        LocalizationMacro.self
     ]
 }
