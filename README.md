@@ -13,7 +13,7 @@ Add the package to your Swift project:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/OmAr-Kader/SwiftUI-MacroSturdy.git", from: "1.0.0")
+    .package(url: "https://github.com/OmAr-Kader/SwiftUI-MacroSturdy.git", from: "1.0.5")
 ]
 ```
 
