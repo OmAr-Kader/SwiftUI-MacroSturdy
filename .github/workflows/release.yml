@@ -26,6 +26,25 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Sync README version
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          PATTERN='(\.package\(url:[[:space:]]*"https://github\.com/OmAr-Kader/SwiftUI-MacroSturdy\.git",[[:space:]]*from:[[:space:]]*")[^"]*(")'
+          if ! grep -qE "$PATTERN" README.md; then
+            echo "SwiftUI-MacroSturdy dependency not found in README.md, skipping"
+            exit 0
+          fi
+          if grep -qE "from:[[:space:]]*\"$V\"" README.md; then
+            echo "README already at $V"
+            exit 0
+          fi
+          sed -i -E "s|$PATTERN|\1$V\2|" README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update README to $V"
+          git push
+
       - name: Check if tag exists
         id: tag
         run: |
@@ -43,7 +62,7 @@ jobs:
           V="${{ steps.version.outputs.version }}"
           FLAGS=""
           case "$V" in *alpha*) FLAGS="--prerelease" ;; esac
-          git log -1 --pretty=%B > notes.md
+          git log -1 --pretty=%B "$GITHUB_SHA" > notes.md
           gh release create "$V" \
             --target "$GITHUB_SHA" \
             --title "$V" \
