@@ -4,6 +4,8 @@
 import PackageDescription
 import CompilerPluginSupport
 
+let version = "1.0.5"
+
 let package = Package(
     name: "SwiftUI-Sturdy",
     platforms: [

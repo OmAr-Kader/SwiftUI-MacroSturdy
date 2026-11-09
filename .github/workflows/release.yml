@@ -1,0 +1,51 @@
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(sed -nE 's/^[[:space:]]*let[[:space:]]+version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' Package.swift | head -n1)
+          if [ -z "$VERSION" ]; then
+            echo "version not found in Package.swift" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if tag exists
+        id: tag
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create tag and release
+        if: steps.tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          FLAGS=""
+          case "$V" in *alpha*) FLAGS="--prerelease" ;; esac
+          git log -1 --pretty=%B > notes.md
+          gh release create "$V" \
+            --target "$GITHUB_SHA" \
+            --title "$V" \
+            --notes-file notes.md \
+            $FLAGS
