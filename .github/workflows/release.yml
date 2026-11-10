@@ -29,6 +29,12 @@ jobs:
       - name: Sync README version
         run: |
           V="${{ steps.version.outputs.version }}"
+          case "$V" in
+            *alpha*|*beta*)
+              echo "Pre-release $V, skipping README update"
+              exit 0
+              ;;
+          esac
           PATTERN='(\.package\(url:[[:space:]]*"https://github\.com/OmAr-Kader/SwiftUI-MacroSturdy\.git",[[:space:]]*from:[[:space:]]*")[^"]*(")'
           if ! grep -qE "$PATTERN" README.md; then
             echo "SwiftUI-MacroSturdy dependency not found in README.md, skipping"
@@ -61,7 +67,7 @@ jobs:
         run: |
           V="${{ steps.version.outputs.version }}"
           FLAGS=""
-          case "$V" in *alpha*) FLAGS="--prerelease" ;; esac
+          case "$V" in *alpha*|*beta*) FLAGS="--prerelease" ;; esac
           git log -1 --pretty=%B "$GITHUB_SHA" > notes.md
           gh release create "$V" \
             --target "$GITHUB_SHA" \
