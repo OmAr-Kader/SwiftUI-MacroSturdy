@@ -14,7 +14,7 @@ jobs:
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Read version
         id: version
@@ -70,7 +70,7 @@ jobs:
           case "$V" in *alpha*|*beta*) FLAGS="--prerelease" ;; esac
           git log -1 --pretty=%B "$GITHUB_SHA" > notes.md
           gh release create "$V" \
-            --target "$GITHUB_SHA" \
+            --target "$(git rev-parse HEAD)" \
             --title "$V" \
             --notes-file notes.md \
             $FLAGS
