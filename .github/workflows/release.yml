@@ -65,6 +65,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           V="${{ steps.version.outputs.version }}"
+          echo "Version: $V"
           case "$V" in
             *alpha*|*beta*)
               echo "Pre-release $V, skipping cleanup"
@@ -72,22 +73,33 @@ jobs:
               ;;
           esac
 
+          echo "Looking for pre-releases matching $V-alpha* / $V-beta*"
+
           # Releases (and their tags)
-          gh release list --limit 1000 --json tagName --jq '.[].tagName' | while read -r T; do
+          RELEASES=0
+          while read -r T; do
             case "$T" in
               "$V"-alpha*|"$V"-beta*)
-                echo "Deleting release $T"
+                echo "Deleting release + tag: $T"
                 gh release delete "$T" --yes --cleanup-tag
+                RELEASES=$((RELEASES + 1))
                 ;;
             esac
-          done
+          done < <(gh release list --limit 1000 --json tagName --jq '.[].tagName')
+          echo "Releases deleted: $RELEASES"
 
           # Leftover tags without a release
-          git ls-remote --tags origin "refs/tags/$V-alpha*" "refs/tags/$V-beta*" \
-            | awk '{print $2}' | grep -v '\^{}$' | while read -r REF; do
-              echo "Deleting tag $REF"
-              git push origin --delete "$REF"
-            done
+          TAGS=0
+          while read -r REF; do
+            echo "Deleting leftover tag: $REF"
+            git push origin --delete "$REF"
+            TAGS=$((TAGS + 1))
+          done < <(git ls-remote --tags origin "refs/tags/$V-alpha*" "refs/tags/$V-beta*" | awk '{print $2}' | grep -v '\^{}$' || true)
+          echo "Leftover tags deleted: $TAGS"
+
+          if [ "$RELEASES" -eq 0 ] && [ "$TAGS" -eq 0 ]; then
+            echo "No alpha/beta pre-releases found for $V, nothing to clean"
+          fi
 
       - name: Create tag and release
         if: steps.tag.outputs.exists == 'false'
