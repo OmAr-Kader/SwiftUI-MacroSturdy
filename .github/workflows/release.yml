@@ -59,6 +59,35 @@ jobs:
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
+          
+      - name: Delete alpha/beta pre-releases of this version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          case "$V" in
+            *alpha*|*beta*)
+              echo "Pre-release $V, skipping cleanup"
+              exit 0
+              ;;
+          esac
+
+          # Releases (and their tags)
+          gh release list --limit 1000 --json tagName --jq '.[].tagName' | while read -r T; do
+            case "$T" in
+              "$V"-alpha*|"$V"-beta*)
+                echo "Deleting release $T"
+                gh release delete "$T" --yes --cleanup-tag
+                ;;
+            esac
+          done
+
+          # Leftover tags without a release
+          git ls-remote --tags origin "refs/tags/$V-alpha*" "refs/tags/$V-beta*" \
+            | awk '{print $2}' | grep -v '\^{}$' | while read -r REF; do
+              echo "Deleting tag $REF"
+              git push origin --delete "$REF"
+            done
 
       - name: Create tag and release
         if: steps.tag.outputs.exists == 'false'
